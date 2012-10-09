@@ -18,7 +18,7 @@ if(isset($templatelist))
 {
 	$templatelist .= ',';
 }
-	$templatelist .= 'pmpopup, pmpopup_pmrow';
+	$templatelist .= 'pmpopup_link';
 
 
 function pmpopup_info()
@@ -49,7 +49,7 @@ function pmpopup_install()
 	global $PL;
 	
 	pmpopup_uninstall();
-	
+
 	$PL->settings(
 		'pmpopup', 
 		'PM Popup', 
@@ -93,7 +93,7 @@ function pmpopup_install()
 		'PM Popup',
 			array(
 				'' => 'This is the PM Popup template.',
-				'pmrow' => 'This is the pmpopup_pmrow template.',)
+				'link' => '<a id="pmpopupl" href="{$mybb->settings[\'bburl\']}/private.php">{$ppmp[\'unread\']}</a>',)
 	);
 	
 	$PL->stylesheet('pmpopup', 'body { border: solid red 8px; }');
@@ -114,15 +114,15 @@ function pmpopup_activate()
 	pmpopup_deactivate();
 	require_once MYBB_ROOT . "inc/adminfunctions_templates.php";
 	
-	find_replace_templatesets('headerinclude', '#'.preg_quote('<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/popup_menu.js?ver=1600"></script>').'#', '<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/popup_menu.js?ver=1600"></script>' . "\n" . '<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/pmpopup.js?ver=1600"></script>');
-	find_replace_templatesets('header_welcomeblock_member', '#'.preg_quote('<a href="{$mybb->settings[\'bburl\']}/private.php">').'#', '<a id="pmpopup" href="{$mybb->settings[\'bburl\']}/private.php">');
+	//find_replace_templatesets('headerinclude', '#'.preg_quote('<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/popup_menu.js?ver=1600"></script>').'#', '<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/popup_menu.js?ver=1600"></script>' . "\n" . '<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/pmpopup.js?ver=1600"></script>');
+	find_replace_templatesets('header_welcomeblock_member', '#'.preg_quote('<a href="{$mybb->settings[\'bburl\']}/private.php">{$lang->welcome_pms}</a> {$lang->welcome_pms_usage}').'#', '{$linkpmp}{$pmpopup}');
 }
 
 function pmpopup_deactivate()
 {
 	require_once MYBB_ROOT . "inc/adminfunctions_templates.php";
-	find_replace_templatesets('headerinclude', '#'.preg_quote("\n" . '<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/pmpopup.js?ver=1600"></script>').'#', "", 0);
-	find_replace_templatesets('header_welcomeblock_member', '#'.preg_quote('<a id="pmpopup" href="{$mybb->settings[\'bburl\']}/private.php">').'#', '<a href="{$mybb->settings[\'bburl\']}/private.php">');
+	//find_replace_templatesets('headerinclude', '#'.preg_quote("\n" . '<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/pmpopup.js?ver=1600"></script>').'#', "", 0);
+	find_replace_templatesets('header_welcomeblock_member', '#'.preg_quote('{$linkpmp}{$pmpopup}').'#', '<a href="{$mybb->settings[\'bburl\']}/private.php">{$lang->welcome_pms}</a> {$lang->welcome_pms_usage}');
 }
 
 function pmpopup_depend()
@@ -163,13 +163,15 @@ function pmpopup_start()
 
 				if($mybb->user['pms_unread'] == 1)
 				{
-					$ppmp['unread'] = "Tienes un mensaje privado sin leer.";
+					$ppmp['unread'] = "Tienes <strong>1</strong> mensaje privado sin leer.";
 				}
 				else
 				{
-					$ppmp['unread'] = "Tienes {$mybb->user['pms_unread']} mensajes privados sin leer.";
+					$ppmp['unread'] = "Tienes <strong>{$mybb->user['pms_unread']}</strong> mensajes privados sin leer.";
 				}
-
+				
+				eval("\$linkpmp = \"".$templates->get("pmpopup_link")."\";");
+				
 				$query = $db->query("
 					SELECT pm.subject, pm.pmid, pm.message, fu.username AS fromusername, fu.uid AS fromuid
 					FROM ".TABLE_PREFIX."privatemessages pm
@@ -178,7 +180,7 @@ function pmpopup_start()
 					ORDER BY pm.dateline DESC
 					LIMIT {$mybb->settings['pmpopup_limitmps']}
 				");
-				
+
 				while($ppm = $db->fetch_array($query))
 				{
 					$ppm['subject'] = $parser->parse_badwords($ppm['subject']);
@@ -201,8 +203,9 @@ function pmpopup_start()
 
 function pmpopup_end()
 {
-	global $templates;
-	eval("\$pmpopup_row .= \"".$templates->get("pmpopup_pmrow")."\";");
+	global $templates, $linkpmp;
+
+	eval("\$linkpmp = \"".$templates->get("pmpopup_link")."\";");
 }
 
 ?>
