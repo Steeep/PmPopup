@@ -201,6 +201,7 @@ function pmpopup_start()
 
 function pmpopup_end()
 {
+	global $templates;
 	eval("\$pmpopup_row .= \"".$templates->get("pmpopup_pmrow")."\";");
 }
 
