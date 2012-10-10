@@ -115,14 +115,14 @@ function pmpopup_activate()
 	require_once MYBB_ROOT . "inc/adminfunctions_templates.php";
 	
 	//find_replace_templatesets('headerinclude', '#'.preg_quote('<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/popup_menu.js?ver=1600"></script>').'#', '<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/popup_menu.js?ver=1600"></script>' . "\n" . '<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/pmpopup.js?ver=1600"></script>');
-	find_replace_templatesets('header_welcomeblock_member', '#'.preg_quote('<a href="{$mybb->settings[\'bburl\']}/private.php">{$lang->welcome_pms}</a> {$lang->welcome_pms_usage}').'#', '{$linkpmp}{$pmpopup}');
+	find_replace_templatesets('header_welcomeblock_member', '#'.preg_quote('<a href="{$mybb->settings[\'bburl\']}/private.php">{$lang->welcome_pms}</a> {$lang->welcome_pms_usage}').'#', '<!--PMPOPUP-->');
 }
 
 function pmpopup_deactivate()
 {
 	require_once MYBB_ROOT . "inc/adminfunctions_templates.php";
 	//find_replace_templatesets('headerinclude', '#'.preg_quote("\n" . '<script type="text/javascript" src="{$mybb->settings[\'bburl\']}/jscripts/pmpopup.js?ver=1600"></script>').'#', "", 0);
-	find_replace_templatesets('header_welcomeblock_member', '#'.preg_quote('{$linkpmp}{$pmpopup}').'#', '<a href="{$mybb->settings[\'bburl\']}/private.php">{$lang->welcome_pms}</a> {$lang->welcome_pms_usage}');
+	find_replace_templatesets('header_welcomeblock_member', '#'.preg_quote('<!--PMPOPUP-->').'#', '<a href="{$mybb->settings[\'bburl\']}/private.php">{$lang->welcome_pms}</a> {$lang->welcome_pms_usage}');
 }
 
 function pmpopup_depend()
@@ -146,7 +146,7 @@ function pmpopup_depend()
 
 function pmpopup_start()
 {
-	global $PL, $mybb, $db, $parser, $lang, $templates;
+	global $PL, $mybb, $db, $parser, $lang, $header, $templates;
 	pmpopup_depend();
 
 	if($mybb->settings['pmpopup_enable'] == 1)
@@ -169,8 +169,10 @@ function pmpopup_start()
 				{
 					$ppmp['unread'] = "Tienes <strong>{$mybb->user['pms_unread']}</strong> mensajes privados sin leer.";
 				}
-				
-				eval("\$linkpmp = \"".$templates->get("pmpopup_link")."\";");
+					eval('$linkpmp = "'.$templates->get('pmpopup_link').'";');
+					$header = str_replace('<!--PMPOPUP-->', $linkpmp, $header);
+					
+					//eval("\$linkpmp = \"".$templates->get("pmpopup_link")."\";");
 				
 				$query = $db->query("
 					SELECT pm.subject, pm.pmid, pm.message, fu.username AS fromusername, fu.uid AS fromuid
@@ -203,9 +205,10 @@ function pmpopup_start()
 
 function pmpopup_end()
 {
-	global $templates, $linkpmp;
+	global $templates, $header;
 
-	eval("\$linkpmp = \"".$templates->get("pmpopup_link")."\";");
+	eval('$linkpmp = "'.$templates->get('pmpopup_link').'";');
+	$header = str_replace('<!--PMPOPUP-->', $linkpmp, $header);
 }
 
 ?>
